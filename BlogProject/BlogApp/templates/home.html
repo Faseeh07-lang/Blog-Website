@@ -1,0 +1,256 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home - TopBlogs</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { background-color: #f5f7fa; font-family: 'Inter', sans-serif; margin:0; padding:0; }
+    header { background: linear-gradient(90deg,#4b6cb7,#182848); color:white; padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+    header h1 { font-size:1.9rem; font-weight:700; display:flex; align-items:center; gap:0.5rem; }
+    .logout-btn { background-color:#fff; color:#4b6cb7; padding:0.5rem 1.2rem; border-radius:25px; font-weight:600; text-decoration:none; transition:all 0.3s ease; font-size:0.9rem; }
+    .logout-btn:hover { background-color:#182848; color:#fff; }
+    .content-wrapper { display:flex; gap:30px; max-width:1200px; margin:40px auto; }
+    .main-content { flex:3; }
+    .post-card { background-color:#fff; border-radius:15px; box-shadow:0 4px 20px rgba(0,0,0,0.08); margin-bottom:30px; overflow:hidden; padding:20px; }
+    .post-author { display:flex; align-items:center; gap:15px; margin-bottom:10px; }
+    .post-author img { width:50px; height:50px; border-radius:50%; object-fit:cover; }
+    .post-title { font-size:1.3rem; font-weight:600; margin-bottom:10px; }
+    .post-text { font-size:1rem; color:#333; margin-bottom:10px; }
+    .like-btn, .save-btn { border-radius:25px; font-size:0.9rem; padding:5px 15px; margin-right:10px; cursor:pointer; transition:all 0.3s ease; }
+    .save-btn.saved { background-color:#28a745; color:#fff; border:none; }
+    .comment-section { margin-top:15px; }
+    .comment-card { background-color:#f9f9f9; padding:12px 15px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; font-size:0.95rem; }
+    .comment-content { display:flex; flex-direction:column; }
+    .comment-user { font-weight:600; color:#182848; margin-bottom:3px; }
+    .comment-text { color:#555; }
+    .comment-actions { display:flex; align-items:center; gap:10px; }
+    .comment-btn { background:none; border:none; cursor:pointer; font-size:0.85rem; padding:0; transition:color 0.2s ease; }
+    .comment-btn.like { color:#4b6cb7; }
+    .comment-btn.delete { color:#ff4d4f; }
+    .comment-btn:hover { opacity:0.8; }
+    .reply-form input { border-radius:25px; }
+    .reply-form button { border-radius:25px; }
+    .sidebar { flex:1; background-color:#fff; padding:20px; border-radius:15px; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+    .sidebar h5 { font-weight:600; color:#4b6cb7; margin-bottom:20px; text-align:center; }
+    .user-item { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e0e0e0; }
+    .user-info { display:flex; align-items:center; gap:10px; }
+    .user-info img { width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid #4b6cb7; }
+    .user-info a { font-weight:500; color:#333; text-decoration:none; }
+    .user-info a:hover { text-decoration:underline; color:#4b6cb7; }
+    .follow-btn { background-color:#4b6cb7; color:white; border:none; border-radius:25px; padding:5px 12px; font-size:0.85rem; transition:all 0.3s ease; }
+    .followed-btn { background-color:#6c757d; }
+    .follow-btn:hover { background-color:#182848; }
+    footer { background-color:#182848; color:#fff; text-align:center; padding:15px 0; margin-top:40px; font-size:0.9rem; }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1><i class="bi bi-journal-text"></i> TopBlogs</h1>
+  <div>
+    <a href="{% url 'profile' %}" class="logout-btn me-2">Profile</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}" class="logout-btn">Login</a>
+    {% endif %}
+  </div>
+</header>
+
+<div class="content-wrapper container">
+  <div class="main-content">
+    <h4 class="text-primary fw-bold mb-4">Posts from Users You Follow</h4>
+
+    {% if posts %}
+      {% for post in posts %}
+        <div class="post-card">
+          <!-- Author Info -->
+          <div class="post-author">
+            {% if post.author.profile.image %}
+              <img src="{{ post.author.profile.image.url }}" alt="{{ post.author.username }}">
+            {% else %}
+              <img src="{% static 'default.png' %}" alt="Default">
+            {% endif %}
+            <div>
+              <strong>{{ post.author.username }}</strong><br>
+              <small class="text-muted">{{ post.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+          </div>
+
+          <!-- Post Content -->
+          <h5 class="post-title">{{ post.title }}</h5>
+          <p class="post-text">{{ post.text }}</p>
+
+          {% if post.image %}
+            <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" style="max-height:250px; object-fit:cover;">
+          {% endif %}
+
+          <!-- Like & Save Buttons Below Image -->
+          <div class="mb-2">
+            <button class="btn {% if post.id in liked_post_ids %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm like-btn" data-post="{{ post.id }}">
+              Like (<span class="like-count">{{ post.likes.count }}</span>)
+            </button>
+
+            <button class="btn {% if post.id in saved_post_ids %}saved{% else %}btn-outline-success{% endif %} btn-sm save-btn" data-post="{{ post.id }}">
+              {% if post.id in saved_post_ids %}Saved{% else %}Save Post{% endif %}
+            </button>
+          </div>
+
+          <!-- Add Comment -->
+          <form method="post" action="{% url 'add_comment' post.id %}" class="mt-2 mb-3 comment-form">
+            {% csrf_token %}
+            <div class="input-group">
+              <input type="text" name="text" class="form-control form-control-sm" placeholder="Add a comment..." required>
+              <button class="btn btn-outline-secondary" type="submit">Post</button>
+            </div>
+          </form>
+
+          <!-- Comments Section -->
+          <div class="comment-section">
+            {% for comment in post.comments.all %}
+              {% if not comment.parent %}
+                <div class="comment-card">
+                  <div class="comment-content">
+                    <div class="comment-user">{{ comment.user.username }}</div>
+                    <div class="comment-text">{{ comment.text }}</div>
+                  </div>
+                  <div class="comment-actions">
+                    <form method="post" action="{% url 'like_comment' comment.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="comment-btn like">Like ({{ comment.likes.count }})</button>
+                    </form>
+                    {% if comment.user == request.user %}
+                      <form method="post" action="{% url 'delete_comment' comment.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="comment-btn delete">Delete</button>
+                      </form>
+                    {% endif %}
+                  </div>
+
+                  <!-- Replies -->
+                  <form method="post" action="{% url 'add_comment' post.id %}" class="mt-2 ms-4 reply-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                    <input type="text" name="text" class="form-control form-control-sm" placeholder="Reply..." required>
+                  </form>
+
+                  {% for reply in comment.replies.all %}
+                    <div class="comment-card ms-4 mt-2">
+                      <div class="comment-content">
+                        <div class="comment-user">{{ reply.user.username }}</div>
+                        <div class="comment-text">{{ reply.text }}</div>
+                      </div>
+                      <div class="comment-actions">
+                        <form method="post" action="{% url 'like_comment' reply.id %}">
+                          {% csrf_token %}
+                          <button type="submit" class="comment-btn like">Like ({{ reply.likes.count }})</button>
+                        </form>
+                        {% if reply.user == request.user %}
+                          <form method="post" action="{% url 'delete_comment' reply.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="comment-btn delete">Delete</button>
+                          </form>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted text-center">No posts yet. Follow users to see their posts here!</p>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h5>All Users</h5>
+    {% for profile in profiles %}
+      <div class="user-item">
+        <div class="user-info">
+          {% if profile.image %}
+            <img src="{{ profile.image.url }}" alt="{{ profile.user.username }}">
+          {% else %}
+            <img src="{% static 'default.png' %}" alt="Default">
+          {% endif %}
+          <a href="{% url 'VisitProfile' profile.user.id %}">{{ profile.user.username }}</a>
+        </div>
+        {% if profile.user != request.user %}
+          <form method="POST" action="{% url 'follow_user' profile.user.id %}">
+            {% csrf_token %}
+            {% if profile.user.id in following_ids %}
+              <button type="submit" class="follow-btn followed-btn">Followed</button>
+            {% else %}
+              <button type="submit" class="follow-btn">Follow</button>
+            {% endif %}
+          </form>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p class="text-muted text-center">No users found.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 TopBlogs — All rights reserved.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  // Like Post
+  document.querySelectorAll(".like-btn").forEach(button => {
+    button.addEventListener("click", function() {
+      const postId = this.dataset.post;
+      fetch(`/like/${postId}/`)
+        .then(res => res.json())
+        .then(data => {
+          this.querySelector(".like-count").textContent = data.like_count;
+          this.classList.toggle("btn-primary", data.liked);
+          this.classList.toggle("btn-outline-primary", !data.liked);
+        });
+    });
+  });
+
+  // Save Post Toggle
+  document.querySelectorAll(".save-btn").forEach(button => {
+    button.addEventListener("click", function() {
+      const postId = this.dataset.post;
+      fetch(`/savepost/${postId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.status === "saved"){
+          button.classList.add('saved');
+          button.classList.remove('btn-outline-success');
+          button.textContent = "Saved";
+        } else {
+          button.classList.remove('saved');
+          button.classList.add('btn-outline-success');
+          button.textContent = "Save Post";
+        }
+      });
+    });
+  });
+
+});
+</script>
+</body>
+</html>

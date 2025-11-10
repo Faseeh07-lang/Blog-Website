@@ -1,0 +1,253 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile - TopBlogs</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { background-color: #f5f7fa; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+    header { background: linear-gradient(90deg, #4b6cb7, #182848); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    header h1 { font-size: 1.9rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+    .logout-btn { background-color: #fff; color: #4b6cb7; padding: 0.5rem 1.2rem; border-radius: 25px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; font-size: 0.9rem; }
+    .logout-btn:hover { background-color: #182848; color: #fff; }
+    .content-wrapper { display: flex; gap: 30px; max-width: 1200px; margin: 40px auto; }
+
+    /* 3-dot menu styles */
+    .menu-wrapper { position: relative; display: inline-block; float: right; margin-right: 20px; }
+    .menu-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #4b6cb7; }
+    .menu-content { display: none; position: absolute; right: 0; top: 30px; background-color: #fff; min-width: 150px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; z-index: 1000; }
+    .menu-content a, .menu-content button { color: #333; padding: 10px 15px; text-decoration: none; display: block; width: 100%; text-align: left; border: none; background: none; cursor: pointer; font-size: 0.95rem; }
+    .menu-content a:hover, .menu-content button:hover { background-color: #f1f1f1; }
+
+    /* Profile Card */
+    .profile-card { flex: 1; background-color: #fff; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px 20px; text-align: center; position: relative; }
+
+    .profile-card img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #4b6cb7; transition: transform 0.3s ease; }
+    .profile-card img:hover { transform: scale(1.05); }
+
+    .profile-card h3 { margin-top: 15px; font-weight: 700; }
+    .profile-card p { color: #555; }
+
+    .profile-card .btn { border-radius: 25px; font-weight: 500; margin: 5px; display: flex; align-items: center; gap: 5px; }
+    .profile-card .btn-primary:hover { background-color: #182848; }
+    .profile-card .btn-success:hover { background-color: #14532d; }
+    .profile-card hr { margin: 25px 0; }
+    .profile-card ul { list-style: none; padding-left: 0; text-align: left; }
+    .profile-card ul li { padding: 5px 0; font-size: 0.95rem; }
+    .see-all-link { cursor: pointer; color: #4b6cb7; font-size: 0.9rem; margin-left: 5px; }
+
+    /* Posts Section */
+    .posts-section { flex: 2; }
+    .post-card { background-color: #fff; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 30px; overflow: hidden; padding: 20px; }
+    .post-author { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+    .post-author img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+    .post-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 10px; }
+    .post-text { font-size: 1rem; color: #333; margin-bottom: 15px; }
+    .like-btn { border-radius: 25px; font-size: 0.9rem; padding: 5px 15px; }
+
+    .comment-section { margin-top: 20px; }
+    .comment-card { background-color: #f9f9f9; padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.95rem; }
+    .comment-content { display: flex; flex-direction: column; }
+    .comment-user { font-weight: 600; color: #182848; margin-bottom: 3px; }
+    .comment-text { color: #555; }
+    .comment-actions { display: flex; align-items: center; gap: 10px; }
+    .comment-btn { background: none; border: none; cursor: pointer; font-size: 0.85rem; padding: 0; transition: color 0.2s ease; }
+    .comment-btn.like { color: #4b6cb7; }
+    .comment-btn.delete { color: #ff4d4f; }
+    .comment-btn:hover { opacity: 0.8; }
+
+    .reply-form input { border-radius: 25px; }
+    .reply-form button { border-radius: 25px; }
+
+    footer { background-color: #182848; color: #fff; text-align: center; padding: 15px 0; margin-top: 40px; font-size: 0.9rem; }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1><i class="bi bi-journal-text"></i> TopBlogs</h1>
+  <div>
+    <a href="{% url 'home' %}" class="logout-btn me-2">Home</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}" class="logout-btn">Login</a>
+    {% endif %}
+  </div>
+</header>
+
+<div class="content-wrapper container">
+  <!-- Profile Card -->
+  <div class="profile-card">
+    <!-- 3-dot menu -->
+    <div class="menu-wrapper">
+      <button class="menu-btn"><i class="bi bi-three-dots-vertical"></i></button>
+      <div class="menu-content">
+        <a href="{% url 'show_saved_post' %}">Saved Posts</a>
+        <button id="delete-account-btn">Delete Account</button>
+      </div>
+    </div>
+
+    {% if profile.image %}
+      <img src="{{ profile.image.url }}" alt="Profile Image">
+    {% else %}
+      <img src="{% static 'default.png' %}" alt="Profile Image">
+    {% endif %}
+    <h3>{{ request.user.username }}</h3>
+    <p>{% if profile.bio %}{{ profile.bio }}{% else %}This user has not added a bio yet.{% endif %}</p>
+
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-3">
+      <a href="{% url 'create_post' %}" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square"></i> Create Post</a>
+      <a href="{% url 'edit_profile' %}" class="btn btn-success btn-sm"><i class="bi bi-person-lines-fill"></i> Edit Profile</a>
+    </div>
+
+    <hr>
+
+    <!-- Followers / Following Lists -->
+    <h6>Followers ({{ followers.count }}) {% if followers.count > 2 %}<span class="see-all-link" data-type="followers">See All</span>{% endif %}</h6>
+    <ul id="followers-list">
+      {% for f in followers|slice:":2" %}<li><i class="bi bi-person-fill"></i> {{ f.follower.username }}</li>{% endfor %}
+      {% for f in followers|slice:"2:" %}<li class="extra-follower d-none"><i class="bi bi-person-fill"></i> {{ f.follower.username }}</li>{% endfor %}
+      {% if followers.count == 0 %}<li>No followers yet</li>{% endif %}
+    </ul>
+
+    <h6>Following ({{ following.count }}) {% if following.count > 2 %}<span class="see-all-link" data-type="following">See All</span>{% endif %}</h6>
+    <ul id="following-list">
+      {% for f in following|slice:":2" %}<li><i class="bi bi-person-check-fill"></i> {{ f.following.username }}</li>{% endfor %}
+      {% for f in following|slice:"2:" %}<li class="extra-following d-none"><i class="bi bi-person-check-fill"></i> {{ f.following.username }}</li>{% endfor %}
+      {% if following.count == 0 %}<li>Not following anyone yet</li>{% endif %}
+    </ul>
+  </div>
+
+  <!-- Posts Section -->
+  <div class="posts-section">
+    <h4 class="fw-bold text-center mb-4">Your Posts</h4>
+    {% if posts %}
+      {% for post in posts %}
+        <div class="post-card">
+          <div class="post-author">
+            {% if profile.image %}<img src="{{ profile.image.url }}" alt="Profile">{% else %}<img src="{% static 'default.png' %}" alt="Profile">{% endif %}
+            <div>
+              <h6 class="fw-bold mb-0">{{ post.author.username }}</h6>
+              <small class="text-muted">{{ post.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+          </div>
+
+          <h5 class="post-title">{{ post.title }}</h5>
+          <p class="post-text">{{ post.text }}</p>
+          {% if post.image %}<img src="{{ post.image.url }}" class="img-fluid rounded mb-2" style="max-height:250px; object-fit:cover;">{% endif %}
+
+          <div class="mb-2">
+            <button class="btn {% if post.id in liked_post_ids %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm like-btn" data-post="{{ post.id }}">
+              👍 Like (<span class="like-count">{{ post.likes.count }}</span>)
+            </button>
+          </div>
+
+          <hr>
+          <p class="fw-bold mb-2">Comments ({{ post.comments.count }})</p>
+          <div class="comment-section">
+            {% for comment in post.comments.all %}
+              {% if not comment.parent %}
+                <div class="comment-card">
+                  <div class="comment-content">
+                    <div class="comment-user">{{ comment.user.username }}</div>
+                    <div class="comment-text">{{ comment.text }}</div>
+                  </div>
+                  <div class="comment-actions">
+                    <form method="post" action="{% url 'like_comment' comment.id %}">{% csrf_token %}<button type="submit" class="comment-btn like">👍 {{ comment.likes.count }}</button></form>
+                    {% if comment.user == request.user or post.author == request.user %}
+                      <form method="post" action="{% url 'delete_comment' comment.id %}">{% csrf_token %}<button type="submit" class="comment-btn delete">🗑️</button></form>
+                    {% endif %}
+                  </div>
+                  <form method="post" action="{% url 'add_comment' post.id %}" class="mt-2 ms-4 reply-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                    <input type="text" name="text" class="form-control form-control-sm" placeholder="Reply..." required>
+                  </form>
+
+                  {% for reply in comment.replies.all %}
+                    <div class="comment-card ms-4 mt-1">
+                      <div class="comment-content">
+                        <div class="comment-user">{{ reply.user.username }}</div>
+                        <div class="comment-text">{{ reply.text }}</div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-center text-muted">You haven’t posted anything yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 TopBlogs — All rights reserved.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Toggle menu
+  const menuBtn = document.querySelector(".menu-btn");
+  const menuContent = document.querySelector(".menu-content");
+  menuBtn.addEventListener("click", () => menuContent.style.display = menuContent.style.display === 'block' ? 'none' : 'block');
+  document.addEventListener("click", e => { if(!menuBtn.contains(e.target)) menuContent.style.display = 'none'; });
+
+  // Delete Account AJAX
+  document.getElementById("delete-account-btn").addEventListener("click", function(){
+    if(confirm("Are you sure you want to delete your account? This action cannot be undone.")){
+      fetch("{% url 'delete_account' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" }
+      })
+      .then(res => { if(res.ok) window.location.href = "{% url 'login' %}"; });
+    }
+  });
+
+  // Post Like AJAX
+  document.querySelectorAll(".like-btn").forEach(button => {
+    button.addEventListener("click", function(e) {
+      e.preventDefault();
+      const postId = this.dataset.post;
+      fetch(`/like/${postId}/`)
+        .then(res => res.json())
+        .then(data => {
+          this.querySelector(".like-count").textContent = data.like_count;
+          this.classList.toggle("btn-primary", data.liked);
+          this.classList.toggle("btn-outline-primary", !data.liked);
+        });
+    });
+  });
+
+  // See All Followers / Following
+  document.querySelectorAll(".see-all-link").forEach(link => {
+    link.addEventListener("click", function() {
+      const type = this.dataset.type;
+      let items;
+      if(type === "followers") items = document.querySelectorAll(".extra-follower");
+      else items = document.querySelectorAll(".extra-following");
+
+      if(this.textContent === "See All") {
+        items.forEach(li => li.classList.remove("d-none"));
+        this.textContent = "See Less";
+      } else {
+        items.forEach(li => li.classList.add("d-none"));
+        this.textContent = "See All";
+      }
+    });
+  });
+});
+</script>
+</body>
+</html>
